@@ -10,13 +10,17 @@ using oop_s2_2_mvc_79189.Data;
 
 namespace oop_s2_2_mvc_79189.Controllers
 {
-    public class InspectionsController : Controller
-    {
-        private readonly ApplicationDbContext _context;
 
-        public InspectionsController(ApplicationDbContext context)
+    public class InspectionsController : Controller
+
+    {
+
+        private readonly ApplicationDbContext _context;
+        private readonly ILogger<InspectionsController> _logger;
+        public InspectionsController(ApplicationDbContext context, ILogger<InspectionsController> logger)
         {
             _context = context;
+            _logger = logger;
         }
 
         // GET: Inspections
@@ -63,8 +67,25 @@ namespace oop_s2_2_mvc_79189.Controllers
             {
                 _context.Add(inspection);
                 await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
+
+                // BUSINESS LOGIC
+                if (inspection.Score < 70)
+                {
+                    _logger.LogWarning("Inspection FAILED: Premises {PremisesId}, Score {Score}",
+                        inspection.PremisesId, inspection.Score);
+                }
+                else
+                {
+                    _logger.LogInformation("Inspection passed: Premises {PremisesId}, Score {Score}",
+                        inspection.PremisesId, inspection.Score);
+                }
+
+                return RedirectToAction(nameof(Index)); // 🔥 VERY IMPORTANT
             }
+
+            // ❌ only runs if invalid
+            _logger.LogWarning("Invalid inspection model submitted");
+
             ViewData["PremisesId"] = new SelectList(_context.Premises, "Id", "Address", inspection.PremisesId);
             return View(inspection);
         }
@@ -104,9 +125,15 @@ namespace oop_s2_2_mvc_79189.Controllers
                 {
                     _context.Update(inspection);
                     await _context.SaveChangesAsync();
+
+                    // LOG here
+                    _logger.LogInformation("Inspection updated: {Id}, Score: {Score}",
+                        inspection.Id, inspection.Score);
                 }
-                catch (DbUpdateConcurrencyException)
+                catch (DbUpdateConcurrencyException ex)
                 {
+                    _logger.LogError(ex, "Error updating inspection {Id}", inspection.Id);
+
                     if (!InspectionExists(inspection.Id))
                     {
                         return NotFound();
@@ -150,9 +177,14 @@ namespace oop_s2_2_mvc_79189.Controllers
             if (inspection != null)
             {
                 _context.Inspections.Remove(inspection);
+                await _context.SaveChangesAsync();
+
+                // LOG AFTER DELETE
+                _logger.LogWarning("Inspection deleted: {Id}", inspection.Id);
             }
 
             await _context.SaveChangesAsync();
+
             return RedirectToAction(nameof(Index));
         }
 

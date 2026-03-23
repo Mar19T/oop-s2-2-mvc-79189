@@ -110,8 +110,10 @@ namespace oop_s2_2_mvc_79189.Controllers
                     _logger.LogInformation("Premises updated: {Id}, Name: {Name}, Town: {Town}",
                         premises.Id, premises.Name, premises.Town);
                 }
-                catch (DbUpdateConcurrencyException)
+                catch (DbUpdateConcurrencyException ex)
                 {
+                    _logger.LogError(ex, "Error updating premises {Id}", premises.Id);
+
                     if (!PremisesExists(premises.Id))
                     {
                         return NotFound();

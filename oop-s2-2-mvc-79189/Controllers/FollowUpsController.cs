@@ -13,11 +13,14 @@ namespace oop_s2_2_mvc_79189.Controllers
     public class FollowUpsController : Controller
     {
         private readonly ApplicationDbContext _context;
+        private readonly ILogger<InspectionsController> _logger;
 
-        public FollowUpsController(ApplicationDbContext context)
+        public FollowUpsController(ApplicationDbContext context, ILogger<InspectionsController> logger)
         {
             _context = context;
+            _logger = logger;
         }
+        
 
         // GET: FollowUps
         public async Task<IActionResult> Index()
@@ -63,7 +66,10 @@ namespace oop_s2_2_mvc_79189.Controllers
             {
                 _context.Add(followUp);
                 await _context.SaveChangesAsync();
+                _logger.LogInformation("FollowUp created for Inspection {InspectionId}",
+    followUp.InspectionId);
                 return RedirectToAction(nameof(Index));
+
             }
             ViewData["InspectionId"] = new SelectList(_context.Inspections, "Id", "Notes", followUp.InspectionId);
             return View(followUp);
@@ -104,6 +110,7 @@ namespace oop_s2_2_mvc_79189.Controllers
                 {
                     _context.Update(followUp);
                     await _context.SaveChangesAsync();
+                    _logger.LogInformation("FollowUp updated: {Id}", followUp.Id);
                 }
                 catch (DbUpdateConcurrencyException)
                 {
@@ -150,6 +157,7 @@ namespace oop_s2_2_mvc_79189.Controllers
             if (followUp != null)
             {
                 _context.FollowUps.Remove(followUp);
+                _logger.LogWarning("FollowUp deleted: {Id}", followUp.Id);
             }
 
             await _context.SaveChangesAsync();
