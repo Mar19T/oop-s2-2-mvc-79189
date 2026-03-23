@@ -1,20 +1,32 @@
-﻿<h1>Dashboard</h1>
+﻿<h1 class="mb-4">Dashboard</h1>
 
-<div style="display:flex; gap:20px;">
+<div class="row">
 
-    <div style="background:#d4edda; padding:20px;">
-        <h3>Total Inspections</h3>
-        <p>@ViewBag.Total</p>
+    <div class="col-md-4">
+        <div class="card text-white bg-success mb-3">
+            <div class="card-body">
+                <h5 class="card-title">Total Inspections</h5>
+                <h2>@ViewBag.Total</h2>
+            </div>
+        </div>
     </div>
 
-    <div style="background:#f8d7da; padding:20px;">
-        <h3>Failed Inspections</h3>
-        <p>@ViewBag.Failed</p>
+    <div class="col-md-4">
+        <div class="card text-white bg-danger mb-3">
+            <div class="card-body">
+                <h5 class="card-title">Failed Inspections</h5>
+                <h2>@ViewBag.Failed</h2>
+            </div>
+        </div>
     </div>
 
-    <div style="background:#fff3cd; padding:20px;">
-        <h3>Overdue FollowUps</h3>
-        <p>@ViewBag.Overdue</p>
+    <div class="col-md-4">
+        <div class="card text-dark bg-warning mb-3">
+            <div class="card-body">
+                <h5 class="card-title">Overdue FollowUps</h5>
+                <h2>@ViewBag.Overdue</h2>
+            </div>
+        </div>
     </div>
 
 </div>

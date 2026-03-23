@@ -5,9 +5,12 @@ public class DashboardController : Controller
 {
     private readonly ApplicationDbContext _context;
 
-    public DashboardController(ApplicationDbContext context)
+    private readonly ILogger<DashboardController> _logger;
+
+    public DashboardController(ApplicationDbContext context, ILogger<DashboardController> logger)
     {
         _context = context;
+        _logger = logger;
     }
 
     public IActionResult Index()
@@ -23,6 +26,15 @@ public class DashboardController : Controller
         ViewBag.Total = totalInspections;
         ViewBag.Failed = failedInspections;
         ViewBag.Overdue = overdueFollowUps;
+
+        // LOGGING
+        _logger.LogInformation("Dashboard viewed");
+
+        // Log warnings for failed inspections and overdue follow-ups
+        if (overdueFollowUps > 0)
+        {
+            _logger.LogWarning("There are overdue follow-ups: {Count}", overdueFollowUps);
+        }
 
         return View();
     }
