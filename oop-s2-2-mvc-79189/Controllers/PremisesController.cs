@@ -7,22 +7,27 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Inspections.Domain;
 using oop_s2_2_mvc_79189.Data;
+using Microsoft.Extensions.Logging;
 
 namespace oop_s2_2_mvc_79189.Controllers
 {
     public class PremisesController : Controller
-    {
-        private readonly ApplicationDbContext _context;
 
-        public PremisesController(ApplicationDbContext context)
+    {
+
+        private readonly ApplicationDbContext _context;
+        private readonly ILogger<PremisesController> _logger;
+        public PremisesController(ApplicationDbContext context, ILogger<PremisesController> logger)
         {
             _context = context;
+            _logger = logger;
         }
 
         // GET: Premises
         public async Task<IActionResult> Index()
         {
             return View(await _context.Premises.ToListAsync());
+
         }
 
         // GET: Premises/Details/5
@@ -58,9 +63,11 @@ namespace oop_s2_2_mvc_79189.Controllers
         {
             if (ModelState.IsValid)
             {
+                _logger.LogInformation("Premises created: {Name} in {Town}", premises.Name, premises.Town);
                 _context.Add(premises);
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
+
             }
             return View(premises);
         }
@@ -99,6 +106,9 @@ namespace oop_s2_2_mvc_79189.Controllers
                 {
                     _context.Update(premises);
                     await _context.SaveChangesAsync();
+
+                    _logger.LogInformation("Premises updated: {Id}, Name: {Name}, Town: {Town}",
+                        premises.Id, premises.Name, premises.Town);
                 }
                 catch (DbUpdateConcurrencyException)
                 {
@@ -140,12 +150,15 @@ namespace oop_s2_2_mvc_79189.Controllers
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             var premises = await _context.Premises.FindAsync(id);
+
             if (premises != null)
             {
                 _context.Premises.Remove(premises);
+                await _context.SaveChangesAsync();
+
+                _logger.LogWarning("Premises deleted: {Id}, Name: {Name}", premises.Id, premises.Name);
             }
 
-            await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
         }
 
