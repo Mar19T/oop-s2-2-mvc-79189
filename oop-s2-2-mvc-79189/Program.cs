@@ -2,9 +2,45 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using oop_s2_2_mvc_79189.Data;
 using Serilog;
+using Serilog.Events;
 using System;
 
-var builder = WebApplication.CreateBuilder(args);
+Log.Logger = new LoggerConfiguration()
+    .MinimumLevel.Debug()
+    .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)
+    .MinimumLevel.Override("Microsoft.Hosting.Lifetime", LogEventLevel.Information)
+    .Enrich.FromLogContext()
+    .Enrich.WithEnvironmentName()
+    .Enrich.WithProperty("Application", "FoodSafetyTracker")
+    .WriteTo.Console()
+    .WriteTo.File(
+        path: "logs/log-.txt",
+        rollingInterval: RollingInterval.Day,
+        outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss} [{Level:u3}] {Application} {EnvironmentName} {UserName} {Message:lj}{NewLine}{Exception}"
+    )
+    .CreateBootstrapLogger();
+
+try
+{
+    Log.Information("FoodSafetyTracker starting up");
+
+    var builder = WebApplication.CreateBuilder(args);
+
+    // Tell ASP.NET to use Serilog
+    builder.Host.UseSerilog((context, services, configuration) => configuration
+        .MinimumLevel.Debug()
+        .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)
+        .Enrich.FromLogContext()
+        .Enrich.WithEnvironmentName()
+        .Enrich.WithProperty("Application", "FoodSafetyTracker")
+        .WriteTo.Console()
+        .WriteTo.File(
+            path: "logs/log-.txt",
+            rollingInterval: RollingInterval.Day,
+            outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss} [{Level:u3}] {Application} {EnvironmentName} {Message:lj}{NewLine}{Exception}"
+        ));
+
+
 
 // database.
 builder.Services.AddAuthorization();
@@ -17,44 +53,41 @@ builder.Services.AddDefaultIdentity<IdentityUser>(options =>
 .AddRoles<IdentityRole>()          
 .AddEntityFrameworkStores<ApplicationDbContext>();
 
-// Serilog configuration
-Log.Logger = new LoggerConfiguration()
-    .Enrich.FromLogContext()
-    .Enrich.WithMachineName()
-    .WriteTo.Console()
-    .WriteTo.File("logs/log-.txt", rollingInterval: RollingInterval.Day)
-    .CreateLogger();
-builder.Host.UseSerilog();
 
 //MVC configuration
 builder.Services.AddControllersWithViews();
-var app = builder.Build();
+    var app = builder.Build();
 
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-    app.UseMigrationsEndPoint();
-}
-else
-{
+    // ? Custom middleware must come FIRST before anything else
+    app.UseMiddleware<oop_s2_2_mvc_79189.Middleware.ExceptionHandlingMiddleware>();
+
+    // Remove the if/else block entirely and replace with just this:
     app.UseExceptionHandler("/Home/Error");
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
-}
 
-app.UseHttpsRedirection();
-app.UseStaticFiles();
-app.UseRouting();
-app.UseAuthentication();
-app.UseAuthorization();
+    app.UseHttpsRedirection();
+    app.UseStaticFiles();
+    app.UseSerilogRequestLogging(); // ? missing from yours
+    app.UseRouting();
+    app.UseAuthentication();
+    app.UseAuthorization();
 
-app.MapControllerRoute(
-    name: "default",
-    pattern: "{controller=Dashboard}/{action=Index}/{id?}");
-app.MapRazorPages();
-//Seed data
-using (var scope = app.Services.CreateScope())
+    app.MapControllerRoute(
+        name: "default",
+        pattern: "{controller=Dashboard}/{action=Index}/{id?}");
+    app.MapRazorPages();
+    //Seed data
+    using (var scope = app.Services.CreateScope())
 {
     await DbSeeder.SeedAsync(scope.ServiceProvider);
 }
 app.Run();
+}
+catch (Exception ex)
+{
+    Log.Fatal(ex, "Application terminated unexpectedly");
+}
+finally
+{
+    Log.CloseAndFlush();
+}

@@ -16,6 +16,20 @@ namespace oop_s2_2_mvc_79189.Data
         {
             base.OnModelCreating(modelBuilder);
 
+            // Store enums as strings in MySQL
+            modelBuilder.Entity<Premises>()
+                .Property(p => p.RiskRating)
+                .HasConversion<string>();
+
+            modelBuilder.Entity<Inspection>()
+                .Property(i => i.Outcome)
+                .HasConversion<string>();
+
+            modelBuilder.Entity<FollowUp>()
+                .Property(f => f.Status)
+                .HasConversion<string>();
+            base.OnModelCreating(modelBuilder);
+
             // Premises -> Inspections
             modelBuilder.Entity<Inspection>()
                 .HasOne(i => i.Premises)

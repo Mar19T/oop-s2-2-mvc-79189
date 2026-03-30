@@ -1,6 +1,7 @@
-using System.Diagnostics;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Diagnostics;
 using oop_s2_2_mvc_79189.Models;
+using System.Diagnostics;
 
 namespace oop_s2_2_mvc_79189.Controllers
 {
@@ -17,6 +18,7 @@ namespace oop_s2_2_mvc_79189.Controllers
         {
             return View();
         }
+       
 
         public IActionResult Privacy()
         {
@@ -26,7 +28,16 @@ namespace oop_s2_2_mvc_79189.Controllers
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
         public IActionResult Error()
         {
-            return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
+            var exceptionFeature = HttpContext.Features.Get<IExceptionHandlerFeature>();
+
+            var vm = new ErrorViewModel
+            {
+                RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier,
+                Message = "Something went wrong. Please try again or contact support.",
+                StatusCode = HttpContext.Response.StatusCode
+            };
+
+            return View(vm);
         }
     }
 }

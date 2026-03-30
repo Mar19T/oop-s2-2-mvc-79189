@@ -13,14 +13,13 @@ namespace oop_s2_2_mvc_79189.Controllers
     public class FollowUpsController : Controller
     {
         private readonly ApplicationDbContext _context;
-        private readonly ILogger<InspectionsController> _logger;
+        private readonly ILogger<FollowUpsController> _logger;
 
-        public FollowUpsController(ApplicationDbContext context, ILogger<InspectionsController> logger)
+        public FollowUpsController(ApplicationDbContext context, ILogger<FollowUpsController> logger)
         {
             _context = context;
             _logger = logger;
         }
-        
 
         // GET: FollowUps
         public async Task<IActionResult> Index()
@@ -64,16 +63,40 @@ namespace oop_s2_2_mvc_79189.Controllers
         {
             if (ModelState.IsValid)
             {
+                // ✅ NEW — business rule: due date cannot be before inspection date
+                var inspection = await _context.Inspections.FindAsync(followUp.InspectionId);
+                if (inspection != null && followUp.DueDate < inspection.InspectionDate)
+                {
+                    // ✅ NEW — Warning log for business rule violation
+                    _logger.LogWarning(
+                        "FollowUp DueDate {DueDate} is before InspectionDate {InspectionDate} for InspectionId {InspectionId}",
+                        followUp.DueDate, inspection.InspectionDate, followUp.InspectionId);
+
+                    ModelState.AddModelError("DueDate", "Due date cannot be before the inspection date.");
+                    ViewData["InspectionId"] = new SelectList(_context.Inspections, "Id", "Notes", followUp.InspectionId);
+                    return View(followUp);
+                }
+
                 _context.Add(followUp);
                 await _context.SaveChangesAsync();
-                _logger.LogInformation("FollowUp created for Inspection {InspectionId}",
-    followUp.InspectionId);
-                return RedirectToAction(nameof(Index));
 
+                // ✅ NEW — Information log for successful creation
+                _logger.LogInformation(
+                    "FollowUp created for InspectionId {InspectionId}, DueDate {DueDate}, Status {Status}",
+                    followUp.InspectionId, followUp.DueDate, followUp.Status);
+
+                return RedirectToAction(nameof(Index));
             }
+
+            // ✅ NEW — Warning log for validation failure
+            _logger.LogWarning(
+                "FollowUp creation failed validation for InspectionId {InspectionId}",
+                followUp.InspectionId);
+
             ViewData["InspectionId"] = new SelectList(_context.Inspections, "Id", "Notes", followUp.InspectionId);
             return View(followUp);
         }
+
 
         // GET: FollowUps/Edit/5
         public async Task<IActionResult> Edit(int? id)
@@ -99,20 +122,31 @@ namespace oop_s2_2_mvc_79189.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, [Bind("Id,InspectionId,DueDate,Status,ClosedDate")] FollowUp followUp)
         {
-            if (id != followUp.Id)
-            {
-                return NotFound();
-            }
-
             if (ModelState.IsValid)
             {
+                // ✅ NEW — business rule: cannot close without a ClosedDate
+                if (followUp.Status == FollowUpStatus.Closed && followUp.ClosedDate == null)
+                {
+                    _logger.LogWarning(
+                        "Attempt to close FollowUp {FollowUpId} without a ClosedDate",
+                        followUp.Id);
+
+                    ModelState.AddModelError("ClosedDate", "A closed date is required when closing a follow-up.");
+                    ViewData["InspectionId"] = new SelectList(_context.Inspections, "Id", "Notes", followUp.InspectionId);
+                    return View(followUp);
+                }
+
                 try
                 {
                     _context.Update(followUp);
                     await _context.SaveChangesAsync();
-                    _logger.LogInformation("FollowUp updated: {Id}", followUp.Id);
+
+                    // ✅ NEW — Information log for successful edit
+                    _logger.LogInformation(
+                        "FollowUp {FollowUpId} updated, Status {Status}, ClosedDate {ClosedDate}",
+                        followUp.Id, followUp.Status, followUp.ClosedDate);
                 }
-                catch (DbUpdateConcurrencyException)
+                catch (DbUpdateConcurrencyException ex)
                 {
                     if (!FollowUpExists(followUp.Id))
                     {
@@ -120,6 +154,10 @@ namespace oop_s2_2_mvc_79189.Controllers
                     }
                     else
                     {
+                        // ✅ NEW — Error log for unexpected exception
+                        _logger.LogError(ex,
+                            "Concurrency error updating FollowUp {FollowUpId}",
+                            followUp.Id);
                         throw;
                     }
                 }
@@ -157,7 +195,10 @@ namespace oop_s2_2_mvc_79189.Controllers
             if (followUp != null)
             {
                 _context.FollowUps.Remove(followUp);
-                _logger.LogWarning("FollowUp deleted: {Id}", followUp.Id);
+                // ✅ NEW — Information log for deletion
+                _logger.LogInformation(
+                    "FollowUp {FollowUpId} deleted", id);
+
             }
 
             await _context.SaveChangesAsync();
