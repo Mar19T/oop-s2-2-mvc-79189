@@ -1,49 +1,75 @@
 ﻿@model Inspections.Domain.FollowUp
-
 @{
-    ViewData["Title"] = "Edit";
+    ViewData["Title"] = "Edit Follow-Up";
 }
 
-<h1>Edit</h1>
-
-<h4>FollowUp</h4>
+<h1>Edit Follow-Up</h1>
 <hr />
+
 <div class="row">
-    <div class="col-md-4">
+    <div class="col-md-5">
         <form asp-action="Edit">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
             <input type="hidden" asp-for="Id" />
-            <div class="form-group">
-                <label asp-for="InspectionId" class="control-label"></label>
-                <select asp-for="InspectionId" class="form-control" asp-items="ViewBag.InspectionId"></select>
-                <span asp-validation-for="InspectionId" class="text-danger"></span>
+            <input type="hidden" asp-for="InspectionId" />
+
+            <div class="form-group mb-3">
+                <label class="control-label">Inspection</label>
+                <!-- ✅ Locked — shows Premises Name and date, cannot be changed -->
+                <input type="text" class="form-control"
+                       value="@(ViewBag.InspectionDisplay ?? "Unknown")" disabled />
+                <small class="text-muted">Inspection cannot be changed after creation.</small>
             </div>
-            <div class="form-group">
+
+            <div class="form-group mb-3">
                 <label asp-for="DueDate" class="control-label"></label>
-                <input asp-for="DueDate" class="form-control" />
+                <input asp-for="DueDate" class="form-control" type="datetime-local" />
                 <span asp-validation-for="DueDate" class="text-danger"></span>
             </div>
-            <div class="form-group">
+
+            <div class="form-group mb-3">
                 <label asp-for="Status" class="control-label"></label>
-                <select asp-for="Status" class="form-control"></select>
+                <select asp-for="Status" class="form-control"
+                        asp-items="Html.GetEnumSelectList<Inspections.Domain.FollowUpStatus>()">
+                    <option value="">-- Select Status --</option>
+                </select>
                 <span asp-validation-for="Status" class="text-danger"></span>
             </div>
-            <div class="form-group">
+
+            <!-- ✅ ClosedDate only shown on Edit, hidden unless Status is Closed -->
+            <div class="form-group mb-3" id="closedDateGroup"
+                 style="display: @(Model.Status == Inspections.Domain.FollowUpStatus.Closed ? "block" : "none")">
                 <label asp-for="ClosedDate" class="control-label"></label>
-                <input asp-for="ClosedDate" class="form-control" />
+                <input asp-for="ClosedDate" class="form-control" type="datetime-local" />
+                <small class="text-muted">Required when closing a follow-up.</small>
                 <span asp-validation-for="ClosedDate" class="text-danger"></span>
             </div>
-            <div class="form-group">
+
+            <div class="form-group mt-3">
                 <input type="submit" value="Save" class="btn btn-primary" />
+                <a asp-action="Index" class="btn btn-secondary ms-2">Back to List</a>
             </div>
         </form>
     </div>
 </div>
 
-<div>
-    <a asp-action="Index">Back to List</a>
-</div>
-
 @section Scripts {
-    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+
+    <script>
+        // ✅ Show/hide ClosedDate field depending on Status selection
+        const statusSelect = document.getElementById('Status');
+        const closedDateGroup = document.getElementById('closedDateGroup');
+
+        statusSelect.addEventListener('change', function () {
+            if (this.value === 'Closed') {
+                closedDateGroup.style.display = 'block';
+            } else {
+                closedDateGroup.style.display = 'none';
+                document.getElementById('ClosedDate').value = '';
+            }
+        });
+    </script>
 }

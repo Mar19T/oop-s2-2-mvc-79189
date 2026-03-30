@@ -1,54 +1,63 @@
 ﻿@model Inspections.Domain.Inspection
-
 @{
-    ViewData["Title"] = "Edit";
+    ViewData["Title"] = "Edit Inspection";
 }
 
-<h1>Edit</h1>
-
-<h4>Inspection</h4>
+<h1>Edit Inspection</h1>
 <hr />
+
 <div class="row">
-    <div class="col-md-4">
+    <div class="col-md-5">
         <form asp-action="Edit">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
             <input type="hidden" asp-for="Id" />
-            <div class="form-group">
-                <label asp-for="PremisesId" class="control-label"></label>
-                <select asp-for="PremisesId" class="form-control" asp-items="ViewBag.PremisesId"></select>
-                <span asp-validation-for="PremisesId" class="text-danger"></span>
+
+            <div class="form-group mb-3">
+                <label class="control-label">Premises</label>
+                <!-- ✅ Locked — cannot change premises on an existing inspection -->
+                <input type="hidden" asp-for="PremisesId" />
+                <input type="text" class="form-control"
+                       value="@(ViewBag.PremisesDisplay ?? "Unknown")" disabled />
+                <small class="text-muted">Premises cannot be changed after creation.</small>
             </div>
-            <div class="form-group">
+
+            <div class="form-group mb-3">
                 <label asp-for="InspectionDate" class="control-label"></label>
-                <input asp-for="InspectionDate" class="form-control" />
+                <input asp-for="InspectionDate" class="form-control" type="datetime-local" />
                 <span asp-validation-for="InspectionDate" class="text-danger"></span>
             </div>
-            <div class="form-group">
+
+            <div class="form-group mb-3">
                 <label asp-for="Score" class="control-label"></label>
-                <input asp-for="Score" class="form-control" />
+                <input asp-for="Score" class="form-control" type="number" min="0" max="100" />
                 <span asp-validation-for="Score" class="text-danger"></span>
             </div>
-            <div class="form-group">
+
+            <div class="form-group mb-3">
                 <label asp-for="Outcome" class="control-label"></label>
-                <select asp-for="Outcome" class="form-control"></select>
+                <select asp-for="Outcome" class="form-control"
+                        asp-items="Html.GetEnumSelectList<Inspections.Domain.Outcome>()">
+                    <option value="">-- Select Outcome --</option>
+                </select>
                 <span asp-validation-for="Outcome" class="text-danger"></span>
             </div>
-            <div class="form-group">
+
+            <div class="form-group mb-3">
                 <label asp-for="Notes" class="control-label"></label>
-                <input asp-for="Notes" class="form-control" />
+                <textarea asp-for="Notes" class="form-control" rows="3"></textarea>
                 <span asp-validation-for="Notes" class="text-danger"></span>
             </div>
-            <div class="form-group">
+
+            <div class="form-group mt-3">
                 <input type="submit" value="Save" class="btn btn-primary" />
+                <a asp-action="Index" class="btn btn-secondary ms-2">Back to List</a>
             </div>
         </form>
     </div>
 </div>
 
-<div>
-    <a asp-action="Index">Back to List</a>
-</div>
-
 @section Scripts {
-    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
 }
