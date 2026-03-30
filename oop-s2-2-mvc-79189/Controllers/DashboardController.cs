@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Inspections.Domain;
+using Microsoft.AspNetCore.Mvc;
 using oop_s2_2_mvc_79189.Data;
 
 public class DashboardController : Controller
@@ -21,7 +22,7 @@ public class DashboardController : Controller
             .Count(i => i.Score < 70);
 
         var overdueFollowUps = _context.FollowUps
-            .Count(f => f.DueDate < DateTime.Now && f.Status != "Closed");
+            .Count(f => f.DueDate < DateTime.Now && f.Status != FollowUpStatus.Open);
 
         ViewBag.Total = totalInspections;
         ViewBag.Failed = failedInspections;

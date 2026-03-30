@@ -7,16 +7,16 @@ using System.Threading.Tasks;
 
 namespace Inspections.Domain
 {
+    public enum FollowUpStatus { Open, Closed }
+
     public class FollowUp
     {
-        public int Id {get;set;}
-        [Required]
+        public int Id { get; set; }
         public int InspectionId { get; set; }
         public DateTime DueDate { get; set; }
-        public string Status { get; set; }
+        public FollowUpStatus Status { get; set; }
         public DateTime? ClosedDate { get; set; }
-        //Navigation Properties
-        public Inspection? Inspection { get; set; }
+        public Inspection Inspection { get; set; } = null!;
     }
-    public enum FollowUpStatus { Open, Closed }
+
 }
