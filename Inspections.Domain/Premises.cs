@@ -18,4 +18,5 @@ namespace Inspections.Domain
         //relationships:
         public List<Inspection>? Inspections { get; set; }
     }
+    public enum RiskRating {Low, Medium, High}
 }

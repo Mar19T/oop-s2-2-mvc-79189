@@ -12,10 +12,11 @@ namespace Inspections.Domain
         public int Id {get;set;}
         [Required]
         public int InspectionId { get; set; }
-        public Inspection? Inspection { get; set; }
-
         public DateTime DueDate { get; set; }
         public string Status { get; set; }
         public DateTime? ClosedDate { get; set; }
+        //Navigation Properties
+        public Inspection? Inspection { get; set; }
     }
+    public enum FollowUpStatus { Open, Closed }
 }
