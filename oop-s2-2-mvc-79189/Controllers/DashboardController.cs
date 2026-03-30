@@ -1,4 +1,5 @@
 ﻿using Inspections.Domain;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using oop_s2_2_mvc_79189.Data;
@@ -6,6 +7,7 @@ using oop_s2_2_mvc_79189.Models;
 
 namespace oop_s2_2_mvc_79189.Controllers
 {
+    [Authorize(Roles = "Admin,Inspector,Viewer")]
     public class DashboardController : Controller
     {
         private readonly ApplicationDbContext _context;

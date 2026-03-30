@@ -1,59 +1,62 @@
 ﻿@model IEnumerable<Inspections.Domain.Inspection>
+@using Microsoft.AspNetCore.Identity
+@inject SignInManager<IdentityUser> SignInManager
 
 @{
-    ViewData["Title"] = "Index";
+    ViewData["Title"] = "Inspections";
 }
 
-<h1>Index</h1>
+<h1>Inspections</h1>
 
-<p>
-    <a asp-action="Create">Create New</a>
-</p>
-<table class="table">
+@if (User.IsInRole("Admin") || User.IsInRole("Inspector"))
+{
+    <a asp-action="Create" class="btn btn-primary mb-3">+ Create New Inspection</a>
+}
+
+<table class="table table-striped">
     <thead>
         <tr>
-            <th>
-                @Html.DisplayNameFor(model => model.InspectionDate)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Score)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Outcome)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Notes)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Premises)
-            </th>
-            <th></th>
+            <th>@Html.DisplayNameFor(model => model.InspectionDate)</th>
+            <th>@Html.DisplayNameFor(model => model.Score)</th>
+            <th>@Html.DisplayNameFor(model => model.Outcome)</th>
+            <th>@Html.DisplayNameFor(model => model.Notes)</th>
+            <th>Premises</th>
+            <th>Actions</th>
         </tr>
     </thead>
     <tbody>
-@foreach (var item in Model) {
-        <tr>
-            <td>
-                @Html.DisplayFor(modelItem => item.InspectionDate)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Score)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Outcome)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Notes)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Premises.Address)
-            </td>
-            <td>
-                <a asp-action="Edit" asp-route-id="@item.Id">Edit</a> |
-                <a asp-action="Details" asp-route-id="@item.Id">Details</a> |
-                <a asp-action="Delete" asp-route-id="@item.Id">Delete</a>
-            </td>
-        </tr>
-}
+        @foreach (var item in Model)
+        {
+            <tr class="@(item.Outcome == Inspections.Domain.Outcome.Fail ? "table-danger" : "")">
+                <td>@item.InspectionDate.ToString("dd MMM yyyy")</td>
+                <td>@item.Score</td>
+                <td>
+                    <span class="badge @(item.Outcome == Inspections.Domain.Outcome.Fail ? "bg-danger" : "bg-success")">
+                        @item.Outcome
+                    </span>
+                </td>
+                <td>@item.Notes</td>
+                <td>@item.Premises?.Name</td>
+                <td>
+                    @* Details — everyone can see *@
+                    <a asp-action="Details" asp-route-id="@item.Id"
+                       class="btn btn-sm btn-info">Details</a>
+
+                    @* Edit — Admin and Inspector only *@
+                    @if (User.IsInRole("Admin") || User.IsInRole("Inspector"))
+                    {
+                        <a asp-action="Edit" asp-route-id="@item.Id"
+                           class="btn btn-sm btn-warning">Edit</a>
+                    }
+
+                    @* Delete — Admin only *@
+                    @if (User.IsInRole("Admin"))
+                    {
+                        <a asp-action="Delete" asp-route-id="@item.Id"
+                           class="btn btn-sm btn-danger">Delete</a>
+                    }
+                </td>
+            </tr>
+        }
     </tbody>
 </table>
